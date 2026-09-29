@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="greenmove_primary">#004100</color>
+    <color name="greenmove_primary_dark">#002200</color>
+    <color name="greenmove_accent">#87DA74</color>
+    <color name="greenmove_background">#FFFFFF</color>
+    <color name="greenmove_surface">#FFFFFF</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+</resources>

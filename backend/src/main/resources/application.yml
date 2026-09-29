@@ -1,0 +1,78 @@
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: when_authorized
+
+greenmove:
+  frontend-url: ${GREENMOVE_FRONTEND_URL:http://localhost:5173}
+  google:
+    routes-api-key: ${GOOGLE_ROUTES_API_KEY:}
+    # OAuth 2.0 Web Client ID used to verify "Continue with Google" sign-in tokens.
+    # Must match VITE_GOOGLE_CLIENT_ID on the frontend. Leave unset to disable Google Sign-In.
+    client-id: ${GOOGLE_CLIENT_ID:}
+  ev:
+    ocm-api-key: ${OPEN_CHARGE_MAP_API_KEY:}
+    corridor-km: ${EV_CHARGING_ROUTE_CORRIDOR_KM:5.0}
+  jwt:
+    # HMAC secret used to sign user auth JWTs. MUST be overridden in production (32+ random chars).
+    secret: ${JWT_SECRET:dev-only-insecure-secret-change-me-please-32chars}
+    expiration-ms: ${JWT_EXPIRATION_MS:604800000}
+  brevo:
+    # Brevo (https://app.brevo.com) transactional email API key. Backend-only - never expose to
+    # the frontend. Leave unset to run with BrevoEmailService falling back to logging instead of
+    # sending (see BrevoEmailService#isConfigured).
+    api-key: ${BREVO_API_KEY:}
+    # "From" address for verification/notification emails. Must be a verified sender or domain
+    # in your Brevo account, or sends will be rejected by Brevo.
+    sender-email: ${BREVO_SENDER_EMAIL:}
+    sender-name: ${BREVO_SENDER_NAME:GreenMove}
+  vehicle-pool:
+    matching:
+      max-detour-candidates: 10
+      max-spatial-distance-meters: 3000
+      max-detour-distance-meters: 3000
+      max-detour-percentage: 20.0
+      min-route-overlap-percentage: 50.0
+      route-overlap-tolerance-meters: 100
+      scoring:
+        overlap-weight: 0.35
+        pickup-weight: 0.20
+        dropoff-weight: 0.15
+        detour-weight: 0.15
+        time-weight: 0.15
+        max-departure-time-difference-minutes: 30
+
+logging:
+  level:
+    root: INFO
+    com.greenmove: DEBUG
+
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+    url: ${SPRING_DATASOURCE_URL:${DB_URL:jdbc:postgresql://localhost:5432/postgres}}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USERNAME:postgres}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:}}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+  flyway:
+    enabled: true

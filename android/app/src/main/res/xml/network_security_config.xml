@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Network security policy for the GreenMove WebView app.
+
+  - By default, cleartext (http://) traffic is permitted so the app also works
+    against a local dev backend (e.g. http://10.0.2.2:8080 from the emulator,
+    or a LAN IP while testing before you deploy). Once GreenMove is deployed
+    to a real https:// URL (see AppConfig.java), all traffic to it will use
+    TLS automatically because your deployed URL will be https.
+  - If you want to lock the release build down to HTTPS-only, change
+    cleartextTrafficPermitted below to "false".
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
