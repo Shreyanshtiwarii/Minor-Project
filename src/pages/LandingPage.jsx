@@ -372,9 +372,6 @@ export default function LandingPage() {
             <span className="material-symbols-outlined text-primary text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>eco</span>
             <span className="font-headline-md text-headline-md text-primary tracking-tight">GreenMove</span>
           </div>
-          <p className="font-label-sm text-label-sm text-on-surface-variant text-center md:text-left">
-            © 2024 GreenMove. Empowering sustainable transit choices.
-          </p>
           <div className="flex gap-6">
             <a className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy</a>
             <a className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Terms</a>
