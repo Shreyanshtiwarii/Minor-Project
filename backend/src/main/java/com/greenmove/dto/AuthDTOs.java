@@ -2,6 +2,7 @@ package com.greenmove.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -65,6 +66,59 @@ public class AuthDTOs {
 
         public String getEmail() { return email; }
         public void setEmail(String email) { this.email = email; }
+    }
+
+    /** POST /auth/verify-otp */
+    public static class VerifyOtpRequest {
+        @NotBlank(message = "Email is required")
+        @Email(message = "Enter a valid email address")
+        private String email;
+
+        @NotBlank(message = "OTP is required")
+        @Pattern(regexp = "\\d{6}", message = "Enter the 6-digit OTP")
+        private String otp;
+
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        public String getOtp() { return otp; }
+        public void setOtp(String otp) { this.otp = otp; }
+    }
+
+    /** POST /auth/forgot-password and /auth/resend-otp */
+    public static class EmailOnlyRequest {
+        @NotBlank(message = "Email is required")
+        @Email(message = "Enter a valid email address")
+        private String email;
+
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+    }
+
+    /** POST /auth/reset-password */
+    public static class ResetPasswordRequest {
+        @NotBlank(message = "Email is required")
+        @Email(message = "Enter a valid email address")
+        private String email;
+
+        @NotBlank(message = "OTP is required")
+        @Pattern(regexp = "\\d{6}", message = "Enter the 6-digit OTP")
+        private String otp;
+
+        @NotBlank(message = "New password is required")
+        @Size(min = 8, max = 100, message = "Password must be at least 8 characters")
+        private String newPassword;
+
+        @NotBlank(message = "Please confirm your password")
+        private String confirmPassword;
+
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        public String getOtp() { return otp; }
+        public void setOtp(String otp) { this.otp = otp; }
+        public String getNewPassword() { return newPassword; }
+        public void setNewPassword(String newPassword) { this.newPassword = newPassword; }
+        public String getConfirmPassword() { return confirmPassword; }
+        public void setConfirmPassword(String confirmPassword) { this.confirmPassword = confirmPassword; }
     }
 
     public static class GoogleAuthRequest {

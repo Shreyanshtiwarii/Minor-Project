@@ -12,7 +12,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+
+import jakarta.annotation.PostConstruct;
 
 import java.util.List;
 import java.util.Map;
@@ -57,9 +60,22 @@ public class BrevoEmailService implements EmailService {
 
     public BrevoEmailService() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(5000);
-        factory.setReadTimeout(5000);
+        factory.setConnectTimeout(10000);
+        factory.setReadTimeout(15000);
         this.restTemplate = new RestTemplate(factory);
+    }
+
+    /** Makes a missing/misnamed env var obvious in the Render logs right at boot. */
+    @PostConstruct
+    void logConfiguration() {
+        if (isConfigured()) {
+            logger.info("Brevo email is configured (sender: {}).", senderEmail);
+        } else {
+            logger.error("Brevo email is NOT configured: BREVO_API_KEY set={}, BREVO_SENDER_EMAIL set={}. "
+                            + "No emails (OTP, notifications) will be delivered until both are set.",
+                    apiKey != null && !apiKey.trim().isEmpty(),
+                    senderEmail != null && !senderEmail.trim().isEmpty());
+        }
     }
 
     public boolean isConfigured() {
@@ -75,6 +91,24 @@ public class BrevoEmailService implements EmailService {
                 + "<p><a href=\"" + link + "\">Verify my email</a></p>"
                 + "<p>This link expires in 24 hours. If you didn't create a GreenMove account, you can ignore this email.</p>";
         send(toEmail, userName, "Verify your GreenMove account", html, "signup verification");
+    }
+
+    @Override
+    public boolean sendVerificationOtp(String toEmail, String userName, String otp) {
+        String html = "<p>Hi " + escape(userName) + ",</p>"
+                + "<p>Your GreenMove verification code is:</p>"
+                + "<p style=\"font-size:28px;font-weight:bold;letter-spacing:6px;\">" + escape(otp) + "</p>"
+                + "<p>It expires in 10 minutes. If you didn't create a GreenMove account, you can ignore this email.</p>";
+        return send(toEmail, userName, "Your GreenMove verification code", html, "signup OTP");
+    }
+
+    @Override
+    public boolean sendPasswordResetOtp(String toEmail, String userName, String otp) {
+        String html = "<p>Hi " + escape(userName) + ",</p>"
+                + "<p>Use this code to reset your GreenMove password:</p>"
+                + "<p style=\"font-size:28px;font-weight:bold;letter-spacing:6px;\">" + escape(otp) + "</p>"
+                + "<p>It expires in 10 minutes. If you didn't request this, you can ignore this email.</p>";
+        return send(toEmail, userName, "Your GreenMove password reset code", html, "password-reset OTP");
     }
 
     @Override
@@ -104,15 +138,16 @@ public class BrevoEmailService implements EmailService {
         send(oldEmail, userName, "Your GreenMove account email was changed", html, "email-changed notification");
     }
 
-    private void send(String toEmail, String userName, String subject, String htmlContent, String kind) {
+    /** @return true only when Brevo accepted the message (2xx). Failures are logged with Brevo's own error body. */
+    private boolean send(String toEmail, String userName, String subject, String htmlContent, String kind) {
         if (!isConfigured()) {
-            logger.info("[EMAIL:{}] Brevo not configured (BREVO_API_KEY/BREVO_SENDER_EMAIL unset) - " +
-                    "would have sent \"{}\" to {} <{}>.", kind, subject, userName, toEmail);
-            return;
+            logger.error("[EMAIL:{}] Brevo not configured (BREVO_API_KEY/BREVO_SENDER_EMAIL unset) - "
+                    + "could not send \"{}\" to <{}>.", kind, subject, toEmail);
+            return false;
         }
         try {
             Map<String, Object> body = Map.of(
-                    "sender", Map.of("name", senderName, "email", senderEmail),
+                    "sender", Map.of("name", senderName, "email", senderEmail.trim()),
                     "to", List.of(Map.of("email", toEmail, "name", userName != null ? userName : toEmail)),
                     "subject", subject,
                     "htmlContent", htmlContent
@@ -128,14 +163,20 @@ public class BrevoEmailService implements EmailService {
 
             HttpStatusCode status = response.getStatusCode();
             if (!status.is2xxSuccessful()) {
-                logger.error("Brevo API returned non-2xx status {} sending \"{}\" to <{}>", status, kind, toEmail);
-            } else {
-                logger.info("Sent \"{}\" email to <{}> via Brevo.", kind, toEmail);
+                logger.error("Brevo API returned non-2xx status {} sending \"{}\" to <{}>: {}", status, kind, toEmail, response.getBody());
+                return false;
             }
+            logger.info("Sent \"{}\" email to <{}> via Brevo: {}", kind, toEmail, response.getBody());
+            return true;
+        } catch (HttpStatusCodeException e) {
+            // Brevo answered with an error (401 bad key / unrecognised IP, 400 sender not valid, ...):
+            // its JSON body says exactly why.
+            logger.error("Brevo rejected \"{}\" email to <{}>: HTTP {} - {}", kind, toEmail,
+                    e.getStatusCode().value(), e.getResponseBodyAsString());
+            return false;
         } catch (Exception e) {
-            // Never let an email-provider failure break the underlying request (signup, password
-            // change, etc.) - log it and move on. The user can always use "resend verification".
-            logger.error("Failed to send \"{}\" email to <{}> via Brevo: {}", kind, toEmail, e.getMessage());
+            logger.error("Failed to send \"{}\" email to <{}> via Brevo: {}", kind, toEmail, e.toString());
+            return false;
         }
     }
 

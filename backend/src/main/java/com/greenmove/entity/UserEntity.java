@@ -58,6 +58,21 @@ public class UserEntity {
     @Column(name = "verification_sent_at")
     private Instant verificationSentAt;
 
+    @Column(name = "otp_hash")
+    private String otpHash;
+
+    @Column(name = "otp_purpose")
+    private String otpPurpose; // VERIFY_EMAIL or RESET_PASSWORD
+
+    @Column(name = "otp_expires_at")
+    private Instant otpExpiresAt;
+
+    @Column(name = "otp_sent_at")
+    private Instant otpSentAt;
+
+    @Column(name = "otp_attempts", nullable = false)
+    private int otpAttempts = 0;
+
     @Column(name = "vehicle_efficiency")
     private Double vehicleEfficiency;
 
@@ -140,6 +155,21 @@ public class UserEntity {
 
     public Instant getVerificationSentAt() { return verificationSentAt; }
     public void setVerificationSentAt(Instant verificationSentAt) { this.verificationSentAt = verificationSentAt; }
+
+    public String getOtpHash() { return otpHash; }
+    public void setOtpHash(String otpHash) { this.otpHash = otpHash; }
+
+    public String getOtpPurpose() { return otpPurpose; }
+    public void setOtpPurpose(String otpPurpose) { this.otpPurpose = otpPurpose; }
+
+    public Instant getOtpExpiresAt() { return otpExpiresAt; }
+    public void setOtpExpiresAt(Instant otpExpiresAt) { this.otpExpiresAt = otpExpiresAt; }
+
+    public Instant getOtpSentAt() { return otpSentAt; }
+    public void setOtpSentAt(Instant otpSentAt) { this.otpSentAt = otpSentAt; }
+
+    public int getOtpAttempts() { return otpAttempts; }
+    public void setOtpAttempts(int otpAttempts) { this.otpAttempts = otpAttempts; }
 
     public Double getVehicleEfficiency() { return vehicleEfficiency; }
     public void setVehicleEfficiency(Double vehicleEfficiency) { this.vehicleEfficiency = vehicleEfficiency; }

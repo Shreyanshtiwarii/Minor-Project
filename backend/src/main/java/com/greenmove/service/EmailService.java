@@ -19,6 +19,18 @@ public interface EmailService {
     void sendVerificationEmail(String toEmail, String userName, String verificationToken);
 
     /**
+     * 6-digit OTP sent to confirm a new signup's email address.
+     * @return true only if the provider accepted the message (callers should surface false to the user).
+     */
+    boolean sendVerificationOtp(String toEmail, String userName, String otp);
+
+    /**
+     * 6-digit OTP sent for the "Forgot password" flow.
+     * @return true only if the provider accepted the message.
+     */
+    boolean sendPasswordResetOtp(String toEmail, String userName, String otp);
+
+    /**
      * Security notification sent to the account's current email after a password change.
      */
     void sendPasswordChangedNotification(String toEmail, String userName);

@@ -28,6 +28,18 @@ public class ConsoleEmailService implements EmailService {
     }
 
     @Override
+    public boolean sendVerificationOtp(String toEmail, String userName, String otp) {
+        logger.info("[EMAIL:VERIFY-OTP] OTP for {} <{}>: {} (log-only implementation)", userName, toEmail, otp);
+        return true;
+    }
+
+    @Override
+    public boolean sendPasswordResetOtp(String toEmail, String userName, String otp) {
+        logger.info("[EMAIL:RESET-OTP] OTP for {} <{}>: {} (log-only implementation)", userName, toEmail, otp);
+        return true;
+    }
+
+    @Override
     public void sendPasswordChangedNotification(String toEmail, String userName) {
         logger.info("[EMAIL:SECURITY] Password changed for {} <{}>. " +
                 "(No email provider configured - wire BREVO_API_KEY to send for real.)", userName, toEmail);
